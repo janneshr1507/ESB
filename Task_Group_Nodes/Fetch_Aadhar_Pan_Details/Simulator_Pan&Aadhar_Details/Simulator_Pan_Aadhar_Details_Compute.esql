@@ -1,0 +1,13 @@
+
+
+CREATE COMPUTE MODULE Simulator_Pan_Aadhar_Details_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF InputRoot.XMLNSC.Customer.Mobile = '9989910612' THEN
+			SET OutputRoot.XMLNSC.PanDetails.Name = 'Sangamesh';
+			SET OutputRoot.XMLNSC.PanDetails.PanCardNumber = 'EPJEF54658Q';
+		ELSE
+			SET OutputRoot.XMLNSC.Customer.Error = 'Invalid Mobile Number';
+		END IF;
+	END;
+END MODULE;

@@ -1,0 +1,8 @@
+
+
+CREATE COMPUTE MODULE fetchPanAadharDetails_PanServer
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;

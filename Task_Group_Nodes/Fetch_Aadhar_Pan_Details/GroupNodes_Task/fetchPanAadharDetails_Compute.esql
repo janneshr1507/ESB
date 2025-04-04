@@ -1,0 +1,9 @@
+
+
+CREATE COMPUTE MODULE fetchPanAadharDetails_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.XMLNSC.Customer.AadharDetails = InputRoot.ComIbmGroupCompleteNode.Group.Replies.AadharCardDetails.Reply.Root.XMLNSC.AadharDetails;
+		SET OutputRoot.XMLNSC.Customer.PanDetails = InputRoot.ComIbmGroupCompleteNode.Group.Replies.PanCardDetails.Reply.Root.XMLNSC.PanDetails;
+	END;
+END MODULE;
