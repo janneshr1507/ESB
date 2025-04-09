@@ -1,0 +1,98 @@
+
+
+CREATE COMPUTE MODULE Order_Processor_Normalize_Input
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CREATE FIELD OutputRoot.JSON.Data;
+		DECLARE OUTREF REFERENCE TO OutputRoot.JSON.Data;
+		
+		IF FIELDNAME(InputRoot.[<]) = 'DFDL' THEN
+			
+			DECLARE INREF REFERENCE TO InputRoot.DFDL.OrderDetails_CSV.[>];
+			DECLARE COUNT INTEGER 1;
+			DECLARE TOTAL_PRICE DECIMAL 0.00;
+			
+			SET OUTREF.orderId = INREF.OrderID;
+			SET OUTREF.orderDate = INREF.OrderDate;
+			SET OUTREF.customer.id = INREF.CustomerID;
+			SET OUTREF.customer.name = INREF.CustomerName;
+			SET OUTREF.customer.email = INREF.CustomerEmail;
+			
+			CREATE FIELD OUTREF.items TYPE(JSON.Array);
+			
+			WHILE LASTMOVE(INREF) DO
+				
+				SET OUTREF.items.Item[COUNT].itemId = INREF.ItemID;
+				SET OUTREF.items.Item[COUNT].category = INREF.Category;
+				SET OUTREF.items.Item[COUNT].quantity = INREF.Quantity;
+				SET OUTREF.items.Item[COUNT].price = CAST(INREF.Price AS DECIMAL);
+				SET TOTAL_PRICE = TOTAL_PRICE + (CAST(INREF.Price AS DECIMAL) * CAST(INREF.Quantity AS INTEGER));
+				
+				SET COUNT = COUNT + 1;
+				MOVE INREF NEXTSIBLING;
+			END WHILE;
+			
+			SET OUTREF.totalAmount = TOTAL_PRICE;
+			
+			PROPAGATE TO LABEL 'DFDL';
+			
+		ELSEIF FIELDNAME(InputRoot.[<]) = 'XMLNSC' THEN
+			
+			DECLARE INREF REFERENCE TO InputRoot.XMLNSC.OrderMessage;
+			DECLARE COUNT INTEGER 1;
+			
+			SET OUTREF.orderId = INREF.OrderID;
+			SET OUTREF.orderDate = INREF.OrderDate;
+			SET OUTREF.customer.id = INREF.CustomerID;
+			SET OUTREF.customer.name = INREF.CustomerName;
+			SET OUTREF.customer.email = INREF.CustomerEmail;
+			
+			DECLARE REF REFERENCE TO INREF.Items.[>];
+			
+			WHILE LASTMOVE(REF) DO
+				
+				SET OUTREF.items.Item[COUNT].itemId = REF.ItemID;
+				SET OUTREF.items.Item[COUNT].category = REF.Category;
+				SET OUTREF.items.Item[COUNT].quantity = REF.Quantity;
+				SET OUTREF.items.Item[COUNT].price = CAST(REF.Price AS DECIMAL);
+				
+				SET COUNT = COUNT + 1;
+				MOVE REF NEXTSIBLING;
+			END WHILE;
+			
+			SET OUTREF.totalAmount = CAST(INREF.TotalAmount AS DECIMAL);
+			
+			PROPAGATE TO LABEL 'XMLNSC';
+						
+		ELSEIF FIELDNAME(InputRoot.[<]) = 'JSON' THEN
+			
+			DECLARE INREF REFERENCE TO InputRoot.JSON.Data;
+			DECLARE COUNT INTEGER 1;
+			
+			SET OUTREF.orderId = INREF.order_id;
+			SET OUTREF.orderDate = INREF.order_timestamp;
+			SET OUTREF.customer.id = INREF.customer.cust_id;
+			SET OUTREF.customer.name = INREF.customer.full_name;
+			SET OUTREF.customer.email = INREF.customer.email_address;
+			
+			DECLARE REF REFERENCE TO INREF.products.[>];
+			
+			WHILE LASTMOVE(REF) DO
+				
+				SET OUTREF.items.Item[COUNT].itemId = REF.sku;
+				SET OUTREF.items.Item[COUNT].category = REF.type;
+				SET OUTREF.items.Item[COUNT].quantity = REF.qty;
+				SET OUTREF.items.Item[COUNT].price = CAST(REF.unit_price AS DECIMAL);
+				
+				SET COUNT = COUNT + 1;
+				MOVE REF NEXTSIBLING;
+			END WHILE;
+			
+			SET OUTREF.totalAmount = CAST(INREF.amount AS DECIMAL);
+			
+			PROPAGATE TO LABEL 'JSON';
+			
+		END IF;
+	END;
+END MODULE;

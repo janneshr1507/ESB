@@ -1,0 +1,19 @@
+DECLARE REQUEST_URL EXTERNAL CHARACTER;
+
+CREATE COMPUTE MODULE Order_Processor_getCustomerDetails
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		DECLARE INREF REFERENCE TO InputRoot.JSON.Data;
+		
+		--SAVE ORDER DETAILS IN ENVIRONMENT
+		SET Environment.orderDetails.orderId = INREF.orderId;
+		SET Environment.orderDetails.orderDate = INREF.orderDate;
+		SET Environment.orderDetails.items = INREF.items;
+		SET Environment.orderDetails.totalAmount = INREF.totalAmount;
+		
+		--FRAMING REQUEST TO GET CUSTOMER DETAILS FROM EXTERNAL API
+		SET OutputLocalEnvironment.Destination.HTTP.RequestURL = REQUEST_URL || INREF.customer.id;
+		
+	END;
+END MODULE;

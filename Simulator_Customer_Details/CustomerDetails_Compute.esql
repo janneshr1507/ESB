@@ -1,0 +1,16 @@
+
+
+CREATE COMPUTE MODULE CustomerDetails_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		IF InputLocalEnvironment.HTTP.Input.Path.Segment[3] = 'CUST789' THEN
+			SET OutputRoot.JSON.Data.customer.id = 'CUST789';
+			SET OutputRoot.JSON.Data.customer.name = 'John Doe ';
+			SET OutputRoot.JSON.Data.customer.email = 'john.doe@example.com';
+			SET OutputRoot.JSON.Data.customer.address = 'Hyderabad, India - 500012';
+		ELSE
+			SET OutputRoot.JSON.Data.customer.error = 'Customer does not exists';
+		END IF;
+			
+	END;
+END MODULE;
